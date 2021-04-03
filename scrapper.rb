@@ -32,8 +32,8 @@ class ScrapperService
 
   def store_locally
     # store_in_file
-    # unless File.file?('document.html')
-    unless false
+    # unless File.file?('document.html') # tries to get page locally
+    unless false # forces to get page from the web
       html_file = open(@url).read
       html_doc = Nokogiri::HTML(html_file)
       File.write('document.html', html_doc.search('.amcontainer'))
@@ -49,11 +49,15 @@ class ScrapperService
   end
 
   def parse_data2(data2)
+    regexp1 = /(?<address>.*) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus/
+    regexp2 = /((?<address>.*) (Tél fixe : (?<land>(\d)+)) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus|(?<address>.+) Tél portable: (?<cell>.+) Courriel (?<available>.*) En savoir plus)/
     data2_text = data2.text.split(' ').join(' ')
-    contact_details = data2_text.match(/(?<address>.*) Tél portable:(?<cell>.*) Courriel (?<available>.*) En savoir plus/) || {} # empty hash if nil
+    contact_details = data2_text.match(regexp2) || {} # empty hash if nil
     @assmat[:address] = contact_details[:address] || 'NC'
+    @assmat[:land] = contact_details[:land] || 'NC'
     @assmat[:cell] = contact_details[:cell] || 'NC'
     @assmat[:available] = contact_details[:available] || 'NC'
+    pp @assmat
 
     @assmat[:url] = "#{PREFIX}#{data2.search('.wysiwyg a').attribute('href').value}"
   end

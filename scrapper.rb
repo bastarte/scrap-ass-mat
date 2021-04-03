@@ -64,10 +64,19 @@ class ScrapperService
 
   def parse_subpage(url)
     html_file = open(url).read
-    cr_dispos = Nokogiri::HTML(html_file).at_css('p.crDispos')
-    @assmat[:cr_dispos] = cr_dispos ? cr_dispos.text.strip : 'NC'
+    cr_dispos = Nokogiri::HTML(html_file).css('p.crDispos')
+    cr_dispos = cr_dispos.map do |cr_dispo|
+      cr_dispo ? cr_dispo.text.strip : 'NC'
+    end
+    @assmat[:cr_dispos] = cr_dispos.join('-')
 
-    precision_dispo = Nokogiri::HTML(html_file).at_css('div.precisionDispo p')
-    @assmat[:precision] = precision_dispo ? precision_dispo.text.strip.gsub(',', '-') : 'NC'
+    precision_dispo = Nokogiri::HTML(html_file).css('div.precisionDispo p')
+    precision_dispo = precision_dispo.map do |precision_dispopo|
+      precision_dispopo ? precision_dispopo.text.strip.gsub(',', '-') : 'NC'
+    end
+    @assmat[:precision] = precision_dispo.join('-')
+    #
+    # precision_dispo = Nokogiri::HTML(html_file).css('div.precisionDispo p')
+    # @assmat[:precision] = precision_dispo ? precision_dispo.text.strip.gsub(',', '-') : 'NC'
   end
 end

@@ -5,7 +5,7 @@ require 'csv'
 
 # url = 'https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=true&withDispoFuture=false&withNonDispo=false&withDispoNonRenseigne=false'
 
-url = 'https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=true&withDispoFuture=true&withNonDispo=false&withDispoNonRenseigne=false'
+url = "https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=true&withDispoFuture=true&withNonDispo=false&withDispoNonRenseigne=false&start=#{start}"
 
 unless File.file?('results.html')
   html_file = open(url).read
@@ -28,7 +28,7 @@ html_doc.search('.amcontainer').each do |amcontainer|
   assmat[:distance] = data1.text.strip.match(/à (?<dist>.{1,4}) km/)[:dist].gsub(',','.').to_f
 
   data2 = data2.text.split(" ").join(" ")
-  contact_details = data2.match(/(?<address>.*) *Tél portable:(?<cell>.*) Courriel (?<available>.*) En savoir plus/) || {} # empty hash if nil
+  contact_details = data2.match(/(?<address>.*) Tél portable:(?<cell>.*) Courriel (?<available>.*) En savoir plus/) || {} # empty hash if nil
   assmat[:address] = contact_details[:address] || "NC"
   assmat[:cell] = contact_details[:cell] || "NC"
   assmat[:available] = contact_details[:available] || "NC"

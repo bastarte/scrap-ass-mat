@@ -57,26 +57,36 @@ class ScrapperService
     @assmat[:land] = contact_details[:land] || 'NC'
     @assmat[:cell] = contact_details[:cell] || 'NC'
     @assmat[:available] = contact_details[:available] || 'NC'
-    pp @assmat
+    # pp @assmat
 
     @assmat[:url] = "#{PREFIX}#{data2.search('.wysiwyg a').attribute('href').value}"
   end
 
   def parse_subpage(url)
     html_file = open(url).read
-    cr_dispos = Nokogiri::HTML(html_file).css('p.crDispos')
-    cr_dispos = cr_dispos.map do |cr_dispo|
-      cr_dispo ? cr_dispo.text.strip : 'NC'
-    end
-    @assmat[:cr_dispos] = cr_dispos.join('-')
 
-    precision_dispo = Nokogiri::HTML(html_file).css('div.precisionDispo p')
-    precision_dispo = precision_dispo.map do |precision_dispopo|
-      precision_dispopo ? precision_dispopo.text.strip.gsub(',', '-') : 'NC'
+    li = Nokogiri::HTML(html_file).css('.listeDispos li')
+    line = 1
+    li.each_with_index do |dispo, index|
+      next unless (index % 3).zero? # after each li with data, there are 2 lis with nothing interesting
+
+      # get availability details
+      cr_dispo = dispo.at_css('p.crDispos') ? dispo.at_css('p.crDispos').text.strip : 'NC'
+      precision_dispo = dispo.at_css('div.precisionDispo p') ? dispo.at_css('div.precisionDispo p').text.strip.gsub(',', '-') : 'Pas de précision'
+
+      # get the full calendar, which is a big table of avail/not available timeslots.
+      creneau_dispo = '|'
+      dispo.search('tr td img').each_with_index do |creneau, index_creneau|
+        if index_creneau.even?
+          creneau['class'] == 'creneauNonDispo' ? creneau_dispo << "-" : creneau_dispo << "X"
+        end
+        creneau_dispo << '|' if (creneau_dispo.size % 8).zero?
+      end
+
+      # store availability details with a dynamic key name
+      storage_loc = "dispos#{line}".to_sym
+      @assmat[storage_loc] = "#{cr_dispo}***#{precision_dispo}***#{creneau_dispo}"
+      line += 1
     end
-    @assmat[:precision] = precision_dispo.join('-')
-    #
-    # precision_dispo = Nokogiri::HTML(html_file).css('div.precisionDispo p')
-    # @assmat[:precision] = precision_dispo ? precision_dispo.text.strip.gsub(',', '-') : 'NC'
   end
 end

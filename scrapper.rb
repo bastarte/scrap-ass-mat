@@ -1,16 +1,12 @@
 class ScrapperService
   PREFIX = 'https://assmat.loire-atlantique.fr/'.freeze
 
-  # url = 'https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=false&withDispoFuture=true&withNonDispo=false&withDispoNonRenseigne=false'
-
-  # url = 'https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=true&withDispoFuture=false&withNonDispo=false&withDispoNonRenseigne=false'
-
   def call(attributes = {start: 0})
     @url = "https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=true&withDispoFuture=true&withNonDispo=false&withDispoNonRenseigne=false&start=#{attributes[:start]}"
 
     store_locally
 
-    html_file = File.open('document.html')
+    html_file = URI.open('document.html')
     html_doc = Nokogiri::HTML(html_file, nil, 'utf-8')
 
     assmats = []
@@ -34,7 +30,7 @@ class ScrapperService
     # store_in_file
     # unless File.file?('document.html') # tries to get page locally
     unless false # forces to get page from the web
-      html_file = open(@url).read
+      html_file = URI.open(@url).read
       html_doc = Nokogiri::HTML(html_file)
       File.write('document.html', html_doc.search('.amcontainer'))
     end
@@ -49,7 +45,7 @@ class ScrapperService
   end
 
   def parse_data2(data2)
-    regexp1 = /(?<address>.*) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus/
+    # regexp1 = /(?<address>.*) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus/
     regexp2 = /((?<address>.*) (Tél fixe : (?<land>(\d)+)) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus|(?<address>.+) Tél portable: (?<cell>.+) Courriel (?<available>.*) En savoir plus)/
     data2_text = data2.text.split(' ').join(' ')
     contact_details = data2_text.match(regexp2) || {} # empty hash if nil
@@ -63,7 +59,7 @@ class ScrapperService
   end
 
   def parse_subpage(url)
-    html_file = open(url).read
+    html_file = URI.open(url).read
 
     li = Nokogiri::HTML(html_file).css('.listeDispos li')
     line = 1
@@ -78,7 +74,7 @@ class ScrapperService
       creneau_dispo = '|'
       dispo.search('tr td img').each_with_index do |creneau, index_creneau|
         if index_creneau.even?
-          creneau['class'] == 'creneauNonDispo' ? creneau_dispo << "-" : creneau_dispo << "X"
+          creneau['class'] == 'creneauNonDispo' ? creneau_dispo << '-' : creneau_dispo << 'X'
         end
         creneau_dispo << '|' if (creneau_dispo.size % 8).zero?
       end

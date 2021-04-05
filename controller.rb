@@ -15,7 +15,7 @@ class Controller
   private
 
   def save_csv(assmats)
-    CSV.open("data.csv", "wb") do |csv|
+    CSV.open('data.csv', 'wb') do |csv|
       csv << assmats.first.keys # adds the attributes name on the first line
       assmats.each do |hash|
         csv << hash.values

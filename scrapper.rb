@@ -1,7 +1,7 @@
 class ScrapperService
   PREFIX = 'https://assmat.loire-atlantique.fr/'.freeze
 
-  def call(attributes = {start: 0})
+  def call(attributes = { start: 0 })
     @url = "https://assmat.loire-atlantique.fr/jcms/parents/faire-une-recherche-d-assistante-maternelle-fr-r1_58176?idCommune=rp1_62646&codeInsee=44109&cities=44036&longitude=-1.56512&latitude=47.219901&cityName=Nantes&adresse=Passage+Louis+L%C3%A9vesque+44000+Nantes&distance=3000&month=1617200000000&age=1%7C17%7C2%7C3%7C10%7C15%7C16%7C19&branchesId=cra_67000&branchesId=cra_67001&branchesId=&nomassmat=&isSearch=Ok&hashKey=88&withDispo=true&withDispoFuture=true&withNonDispo=false&withDispoNonRenseigne=false&start=#{attributes[:start]}"
 
     store_locally
@@ -67,13 +67,19 @@ class ScrapperService
 
       # get availability details
       cr_dispo        = dispo.at_css('p.crDispos') ? dispo.at_css('p.crDispos').text.strip : 'NC'
-      precision_dispo = dispo.at_css('div.precisionDispo p') ? dispo.at_css('div.precisionDispo p').text.strip.gsub(',', '-') : 'Pas de précision'
+      precision_dispo = if dispo.at_css('div.precisionDispo p')
+                          dispo.at_css('div.precisionDispo p').text.strip.gsub(
+                            ',', '-'
+                          )
+                        else
+                          'Pas de précision'
+                        end
 
       # get the full calendar, which is a big table of avail/not available timeslots.
       creneau_dispo = '|'
       dispo.search('tr td img').each_with_index do |creneau, index_creneau|
         if index_creneau.even? # I can't make the search precise enough so I have to eliminate some cr*ppy tag
-          creneau['class'] == 'creneauNonDispo' ? creneau_dispo << '-' : creneau_dispo << 'X'
+          creneau_dispo << (creneau['class'] == 'creneauNonDispo' ? '-' : 'X')
         end
         creneau_dispo << '|' if (creneau_dispo.size % 8).zero?
       end

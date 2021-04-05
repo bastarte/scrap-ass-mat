@@ -45,7 +45,6 @@ class ScrapperService
   end
 
   def parse_data2(data2)
-    # regexp1 = /(?<address>.*) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus/
     regexp2         = /((?<address>.*) (Tél fixe : (?<land>(\d)+)) Tél portable: (?<cell>.*) Courriel (?<available>.*) En savoir plus|(?<address>.+) Tél portable: (?<cell>.+) Courriel (?<available>.*) En savoir plus)/
     data2_text      = data2.text.split(' ').join(' ')
     contact_details = data2_text.match(regexp2) || {} # empty hash if nil
@@ -73,7 +72,7 @@ class ScrapperService
       # get the full calendar, which is a big table of avail/not available timeslots.
       creneau_dispo = '|'
       dispo.search('tr td img').each_with_index do |creneau, index_creneau|
-        if index_creneau.even?
+        if index_creneau.even? # I can't make the search precise enough so I have to eliminate some cr*ppy tag
           creneau['class'] == 'creneauNonDispo' ? creneau_dispo << '-' : creneau_dispo << 'X'
         end
         creneau_dispo << '|' if (creneau_dispo.size % 8).zero?
